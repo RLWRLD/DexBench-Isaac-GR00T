@@ -1,0 +1,59 @@
+{
+  "state": {
+    "left_arm_joints": {
+      "start": 0,
+      "end": 7
+    },
+    "right_arm_joints": {
+      "start": 7,
+      "end": 14
+    },
+    "head_joints": {
+      "start": 14,
+      "end": 16
+    },
+    "hands_joints": {
+      "start": 16,
+      "end": 56
+    },
+    "torso_joints": {
+      "start": 56,
+      "end": 62
+    }
+  },
+  "action": {
+    "left_arm_joints": {
+      "start": 0,
+      "end": 7
+    },
+    "right_arm_joints": {
+      "start": 7,
+      "end": 14
+    },
+    "head_joints": {
+      "start": 14,
+      "end": 16
+    },
+    "hands_joints": {
+      "start": 16,
+      "end": 56
+    },
+    "torso_joints": {
+      "start": 56,
+      "end": 62
+    }
+  },
+  "video": {
+    "camera_ego_left": {
+      "original_key": "observation.images.camera_ego_left"
+    },
+    "camera_ego_right": {
+      "original_key": "observation.images.camera_ego_right"
+    }
+  },
+  "annotation": {
+    "human.task_description": {
+      "original_key": "task_index"
+    }
+  }
+}
