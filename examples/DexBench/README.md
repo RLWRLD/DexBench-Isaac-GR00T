@@ -4,8 +4,8 @@ This guide shows how to finetune GR00T N1.7 on data collected with the RBY1-M
 robot and Wuji Hand 2. It provides absolute and arm-relative action configurations
 for DexBench tasks.
 
-The example uses the `n1.7-release` tag at commit
-`23ace64f17aa5015259b8609d371eb61a357c776`. Follow the
+This repository's `main` is upstream Isaac-GR00T's `n1.7-release` tag (commit
+`23ace64f17aa5015259b8609d371eb61a357c776`) plus these DexBench examples. Follow the
 [installation guide](../../README.md#installation) before running the commands
 below from the repository root.
 
@@ -35,7 +35,8 @@ Use one current RGB frame from each camera:
 | `camera_ego_left` | `observation.images.camera_ego_left` |
 | `camera_ego_right` | `observation.images.camera_ego_right` |
 
-The H1 dataset uses 320×180 frames downscaled from 640×360. The official
+The DexBench-EA LeRobot sets for GR00T (`lerobot/gr00t_62d_320x180` in each task's dataset) use
+320×180 frames downscaled from the simulator's 640×360. The official
 `nvidia/GR00T-N1.7-3B` checkpoint supplies the image preprocessing settings:
 shortest edge 256 and crop fraction 0.95. No image overrides are needed.
 Use the same input preparation during evaluation.
