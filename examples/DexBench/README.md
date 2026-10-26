@@ -74,10 +74,10 @@ entries after changing the dataset; the upstream tool reuses existing entries.
 
 Select the cameras with `RBY1_CAMERAS`, a comma-separated list of the camera
 names above. The default is `camera_ego_left,camera_ego_right`. To train with
-the ego pair and the left wrist camera:
+the left ego camera and both wrist cameras:
 
 ```bash
-export RBY1_CAMERAS=camera_ego_left,camera_ego_right,camera_wrist_left
+export RBY1_CAMERAS=camera_ego_left,camera_wrist_left,camera_wrist_right
 ```
 
 The list order is the image order in the model input. The checkpoint records
@@ -126,15 +126,15 @@ RBY1_ACTION_MODE=arm_rel NUM_GPUS=4 uv run bash examples/DexBench/train.sh \
 For absolute actions, set `RBY1_ACTION_MODE=abs` (the default). Checkpoints go to
 `outputs/rby1-wuji2-abs` or `outputs/rby1-wuji2-arm_rel`. When `RBY1_CAMERAS` is
 set, the camera names are appended, such as
-`outputs/rby1-wuji2-arm_rel-ego_left-ego_right-wrist_left`. Training resumes from
+`outputs/rby1-wuji2-arm_rel-ego_left-wrist_left-wrist_right`. Training resumes from
 the latest checkpoint in the output directory, so keep a separate directory for
 each camera set. Use the same mode when generating statistics and finetuning.
 Set `NUM_GPUS` to change the GPU count.
 
-Run arm-relative finetuning with the ego pair and the left wrist camera:
+Run arm-relative finetuning with the left ego camera and both wrist cameras:
 
 ```bash
-RBY1_ACTION_MODE=arm_rel RBY1_CAMERAS=camera_ego_left,camera_ego_right,camera_wrist_left \
+RBY1_ACTION_MODE=arm_rel RBY1_CAMERAS=camera_ego_left,camera_wrist_left,camera_wrist_right \
   NUM_GPUS=4 uv run bash examples/DexBench/train.sh --dataset-path /path/to/dataset
 ```
 
