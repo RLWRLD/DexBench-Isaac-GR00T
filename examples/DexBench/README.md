@@ -28,12 +28,15 @@ The four stages are `cmc_flex`, `cmc_abd`, `mcp`, `ip` for the thumb, and
 `mcp_flex`, `mcp_abd`, `pip`, `dip` for the other fingers. For each stage, list
 the five left-hand joints followed by the five right-hand joints.
 
-Use one current RGB frame from each camera:
+Use one current RGB frame from each selected camera. The default is the two
+ego cameras; see [Camera Selection](#camera-selection) for the wrist cameras.
 
 | Camera | LeRobot feature |
 | --- | --- |
 | `camera_ego_left` | `observation.images.camera_ego_left` |
 | `camera_ego_right` | `observation.images.camera_ego_right` |
+| `camera_wrist_left` | `observation.images.camera_wrist_left` |
+| `camera_wrist_right` | `observation.images.camera_wrist_right` |
 
 The DexBench-EA LeRobot sets for GR00T (`lerobot/gr00t_62d_320x180` in each task's dataset) use
 320×180 frames downscaled from the simulator's 640×360. The official
@@ -67,6 +70,28 @@ both absolute and arm-relative statistics can be used for either mode. The arm
 entries in `meta/relative_stats.json` have shape `[40, 7]`. Regenerate these
 entries after changing the dataset; the upstream tool reuses existing entries.
 
+## Camera Selection
+
+Select the cameras with `RBY1_CAMERAS`, a comma-separated list of the camera
+names above. The default is `camera_ego_left,camera_ego_right`. To train with
+the left ego camera and both wrist cameras:
+
+```bash
+export RBY1_CAMERAS=camera_ego_left,camera_wrist_left,camera_wrist_right
+```
+
+The list order is the image order in the model input. The checkpoint records
+it, so `RBY1_CAMERAS` is not needed for inference.
+
+Every selected camera must appear in the dataset's `meta/info.json` features
+and in the `video` section of `meta/modality.json`. The example `modality.json`
+lists all four cameras; entries that are not selected are ignored. Selected
+cameras must share one frame size, because their images are stacked after
+preprocessing. Evaluation must send frames at the size used for training.
+
+Statistics do not depend on the cameras, so existing statistics can be reused.
+Each image adds vision tokens, so a third camera increases the step time.
+
 ## Action Configuration
 
 Use [rby1_wuji2_config.py](rby1_wuji2_config.py) for both modes. Select the mode
@@ -99,8 +124,19 @@ RBY1_ACTION_MODE=arm_rel NUM_GPUS=4 uv run bash examples/DexBench/train.sh \
 ```
 
 For absolute actions, set `RBY1_ACTION_MODE=abs` (the default). Checkpoints go to
-`outputs/rby1-wuji2-abs` or `outputs/rby1-wuji2-arm_rel`. Use the same mode when
-generating statistics and finetuning. Set `NUM_GPUS` to change the GPU count.
+`outputs/rby1-wuji2-abs` or `outputs/rby1-wuji2-arm_rel`. When `RBY1_CAMERAS` is
+set, the camera names are appended, such as
+`outputs/rby1-wuji2-arm_rel-ego_left-wrist_left-wrist_right`. Training resumes from
+the latest checkpoint in the output directory, so keep a separate directory for
+each camera set. Use the same mode when generating statistics and finetuning.
+Set `NUM_GPUS` to change the GPU count.
+
+Run arm-relative finetuning with the left ego camera and both wrist cameras:
+
+```bash
+RBY1_ACTION_MODE=arm_rel RBY1_CAMERAS=camera_ego_left,camera_wrist_left,camera_wrist_right \
+  NUM_GPUS=4 uv run bash examples/DexBench/train.sh --dataset-path /path/to/dataset
+```
 
 Additional arguments are forwarded to the upstream launcher. For example,
 append `--output-dir /path/to/run --max-steps 10000` to override the defaults.
@@ -129,7 +165,8 @@ the policy converts arm-relative predictions using the input state.
 
 Connect the DexBench evaluation client to this machine's address and port.
 Keep simulator joint and camera bindings, task settings, seeds, and execution
-horizon in DexBench. These examples predict 40 actions; the client selects
+horizon in DexBench. The client must send every camera the checkpoint was
+trained with; a wrist camera requires wrist rendering in the simulator. These examples predict 40 actions; the client selects
 how many to execute before requesting another chunk, such as 8, 16, or 40.
 The server's `--execution-horizon` option is for dataset replay only.
 

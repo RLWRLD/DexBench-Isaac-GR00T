@@ -18,6 +18,16 @@ action_mode = os.environ.get("RBY1_ACTION_MODE", "abs")
 if action_mode not in ("abs", "arm_rel"):
     raise ValueError(f"RBY1_ACTION_MODE must be 'abs' or 'arm_rel', got {action_mode!r}")
 
+known_cameras = (
+    "camera_ego_left",
+    "camera_ego_right",
+    "camera_wrist_left",
+    "camera_wrist_right",
+)
+cameras = os.environ.get("RBY1_CAMERAS", "camera_ego_left,camera_ego_right").split(",")
+if len(set(cameras)) != len(cameras) or set(cameras) - set(known_cameras):
+    raise ValueError(f"RBY1_CAMERAS must list unique names from {known_cameras}, got {cameras!r}")
+
 groups = [
     "left_arm_joints",
     "right_arm_joints",
@@ -28,9 +38,7 @@ groups = [
 relative_keys = {"left_arm_joints", "right_arm_joints"} if action_mode == "arm_rel" else set()
 
 rby1_wuji2_config = {
-    "video": ModalityConfig(
-        delta_indices=[0], modality_keys=["camera_ego_left", "camera_ego_right"]
-    ),
+    "video": ModalityConfig(delta_indices=[0], modality_keys=cameras),
     "state": ModalityConfig(delta_indices=[0], modality_keys=groups),
     "action": ModalityConfig(
         delta_indices=list(range(40)),

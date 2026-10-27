@@ -49,6 +49,12 @@
     },
     "camera_ego_right": {
       "original_key": "observation.images.camera_ego_right"
+    },
+    "camera_wrist_left": {
+      "original_key": "observation.images.camera_wrist_left"
+    },
+    "camera_wrist_right": {
+      "original_key": "observation.images.camera_wrist_right"
     }
   },
   "annotation": {
