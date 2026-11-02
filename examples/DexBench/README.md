@@ -70,6 +70,12 @@ above, one 320×180 video per selected camera (by default `camera_ego_left` and
 
 ## Handling the Dataset
 
+A dataset that already ships `meta/modality.json` and `meta/stats.json` in
+this layout can skip the copy and statistics steps in this section. In either
+case, training writes statistics into the dataset directory when it starts:
+`meta/stats.json` if it is missing and `meta/relative_stats.json` always. Keep
+the dataset directory writable.
+
 Prepare the data columns in the 62-joint layout above. If the dataset does not
 already contain a matching `meta/modality.json`, copy the example below.
 Copying this file does not reorder a raw 66-joint export.
