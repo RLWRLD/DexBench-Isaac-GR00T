@@ -23,8 +23,7 @@ from typing import Any, Dict
 import warnings
 
 import albumentations as A
-from huggingface_hub import constants as hf_constants
-from huggingface_hub import snapshot_download
+from huggingface_hub import constants as hf_constants, snapshot_download
 import numpy as np
 from PIL import Image
 import torch
