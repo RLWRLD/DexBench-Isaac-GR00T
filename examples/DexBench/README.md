@@ -59,6 +59,15 @@ The DexBench-EA LeRobot sets for GR00T (`lerobot/gr00t_62d_320x180` in each task
 shortest edge 256 and crop fraction 0.95. No image overrides are needed.
 Use the same input preparation during evaluation.
 
+Training reads a local dataset directory in this `gr00t_62d_320x180` layout,
+passed as `--dataset-path /path/to/your/gr00t_62d_320x180`. It is a LeRobot v2.1
+directory whose `meta/` holds `info.json`, `episodes.jsonl`, `tasks.jsonl`,
+`modality.json` and `stats.json`. The RBY1-Wuji2 configuration reads the 62-D
+`observation.state` and `action` through the five joint groups of the table
+above, one 320×180 video per selected camera (by default `camera_ego_left` and
+`camera_ego_right`), and the language instruction from
+`annotation.human.task_description`.
+
 ## Handling the Dataset
 
 Prepare the data columns in the 62-joint layout above. If the dataset does not
