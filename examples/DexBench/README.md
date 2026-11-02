@@ -5,9 +5,24 @@ robot and Wuji Hand 2. It provides absolute and arm-relative action configuratio
 for DexBench tasks.
 
 This repository's `main` is upstream Isaac-GR00T's `n1.7-release` tag (commit
-`23ace64f17aa5015259b8609d371eb61a357c776`) plus these DexBench examples. Follow the
-[installation guide](../../README.md#installation) before running the commands
-below from the repository root.
+`23ace64f17aa5015259b8609d371eb61a357c776`) plus these DexBench examples. Clone
+this repository rather than upstream, which does not contain `examples/DexBench`:
+
+```bash
+git clone --recurse-submodules https://github.com/RLWRLD/DexBench-Isaac-GR00T
+cd DexBench-Isaac-GR00T
+```
+
+Then follow the rest of the [installation guide](../../README.md#installation)
+(git-lfs, uv, `uv sync`) before running the commands below from the repository root.
+
+Training and the inference server both load the processor of
+`nvidia/Cosmos-Reason2-2B`, a gated Hugging Face repository. Accept its license
+on its Hugging Face page and log in with a token that can read it
+(`uv run hf auth login`, or set `HF_TOKEN`). A fine-grained token needs
+"Read access to contents of all public gated repos you can access". A machine
+without Hub access can instead use an `HF_HOME` cache that already holds the
+repository.
 
 ## Dataset
 
@@ -44,7 +59,22 @@ The DexBench-EA LeRobot sets for GR00T (`lerobot/gr00t_62d_320x180` in each task
 shortest edge 256 and crop fraction 0.95. No image overrides are needed.
 Use the same input preparation during evaluation.
 
+Training reads a local dataset directory in this `gr00t_62d_320x180` layout,
+passed as `--dataset-path /path/to/your/gr00t_62d_320x180`. It is a LeRobot v2.1
+directory whose `meta/` holds `info.json`, `episodes.jsonl`, `tasks.jsonl`,
+`modality.json` and `stats.json`. The RBY1-Wuji2 configuration reads the 62-D
+`observation.state` and `action` through the five joint groups of the table
+above, one 320×180 video per selected camera (by default `camera_ego_left` and
+`camera_ego_right`), and the language instruction from
+`annotation.human.task_description`.
+
 ## Handling the Dataset
+
+A dataset that already ships `meta/modality.json` and `meta/stats.json` in
+this layout can skip the copy and statistics steps in this section. In either
+case, training writes statistics into the dataset directory when it starts:
+`meta/stats.json` if it is missing and `meta/relative_stats.json` always. Keep
+the dataset directory writable.
 
 Prepare the data columns in the 62-joint layout above. If the dataset does not
 already contain a matching `meta/modality.json`, copy the example below.
@@ -129,7 +159,14 @@ set, the camera names are appended, such as
 `outputs/rby1-wuji2-arm_rel-ego_left-wrist_left-wrist_right`. Training resumes from
 the latest checkpoint in the output directory, so keep a separate directory for
 each camera set. Use the same mode when generating statistics and finetuning.
-Set `NUM_GPUS` to change the GPU count.
+Set `NUM_GPUS` to change the GPU count. Each data loader worker reads its own
+shards, so `NUM_GPUS` times `--dataloader-num-workers` must not exceed
+`--num-shards-per-epoch` (32); otherwise training stops at the first batch with
+`IndexError: list index out of range`. `train.sh` uses `min(8, 32 / NUM_GPUS)`
+workers per GPU; pass `--dataloader-num-workers` to override it.
+The workers pass decoded frames through `/dev/shm`, and a container's default
+64 MB is not enough: give it `--shm-size 16g` or more with Docker, or mount an
+`emptyDir` volume with `medium: Memory` at `/dev/shm` on Kubernetes.
 
 Run arm-relative finetuning with the left ego camera and both wrist cameras:
 
@@ -141,7 +178,11 @@ RBY1_ACTION_MODE=arm_rel RBY1_CAMERAS=camera_ego_left,camera_wrist_left,camera_w
 Additional arguments are forwarded to the upstream launcher. For example,
 append `--output-dir /path/to/run --max-steps 10000` to override the defaults.
 
-To enable Weights & Biases logging, set `WANDB_ENTITY` and add `--use-wandb`.
+Weights & Biases logging is off unless you add `--use-wandb`, so no W&B key is
+needed by default. With it, log in first (`wandb login` or `WANDB_API_KEY`) and
+set `WANDB_ENTITY`; runs go to the project `finetune-gr00t-n1d7` unless you pass
+`--wandb-project <name>`, and `--experiment-name` sets the run name (default:
+the output directory name).
 
 ## Inference Server
 
@@ -152,7 +193,7 @@ the remaining arguments:
 ```bash
 head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n' > /path/to/token   # once; give the client the same token
 CUDA_VISIBLE_DEVICES=0 uv run bash examples/DexBench/serve.sh \
-  --model-path outputs/rby1-wuji2-arm_rel/checkpoint-30000 \
+  --model-path "$PWD/outputs/rby1-wuji2-arm_rel/checkpoint-30000" \
   --device cuda \
   --host 0.0.0.0 \
   --port 5555 \
@@ -160,8 +201,18 @@ CUDA_VISIBLE_DEVICES=0 uv run bash examples/DexBench/serve.sh \
 ```
 
 With `--api-token-file` the server answers only requests that carry that token (the DexBench client sends it from
-`DEXBENCH_POLICY_API_TOKEN`). Without it, anyone who can reach the port can drive the policy, so keep it on a server
-bound to `0.0.0.0`.
+`DEXBENCH_POLICY_API_TOKEN`; an upstream `PolicyClient` takes it as `PolicyClient(host, port, api_token=...)`).
+Without it, anyone who can reach the port can drive the policy, so keep it on a server bound to `0.0.0.0`.
+
+Serve a `checkpoint-N` directory: each one holds the weights together with the
+processor files (`processor_config.json`, `statistics.json`,
+`embodiment_id.json`), and training writes a final one at `--max-steps`.
+Give `--model-path` as an absolute path. The server checks that an absolute
+path exists; a relative path that does not resolve is taken as a Hugging Face
+repository id and fails with an unrelated download error.
+Loading takes a while. The server prints a line starting with `✓ Server ready`
+once it accepts requests; scripts that start it should wait for that line
+before connecting a client.
 
 For absolute actions, use the checkpoint from `outputs/rby1-wuji2-abs`.
 `RBY1_ACTION_MODE` is not needed for inference.

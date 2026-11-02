@@ -104,7 +104,7 @@ GR00T N1.7 builds on N1.6 with a new VLM backbone and code-level improvements.
 
 **Fine-tuning:** 1 or more GPUs with 40 GB+ VRAM recommended. We recommend H100 or L40 nodes for optimal performance. Other hardware (e.g., A6000) works but may require longer training time. See the [Hardware Recommendation Guide](getting_started/hardware_recommendation.md) for detailed specs.
 
-**CUDA / Python per platform:** dGPU on CUDA 12.8 with Python 3.10; Jetson Orin on CUDA 12.6 with Python 3.10; Jetson Thor and DGX Spark on CUDA 13.0 with Python 3.12. The per-platform install scripts and Dockerfiles live under `scripts/deployment/`; see the [Deployment & Inference Guide](scripts/deployment/README.md) for the full matrix.
+**CUDA / Python per platform:** dGPU on CUDA 12.8 with Python 3.10 (the PyTorch wheels are built for CUDA 12.8, so the NVIDIA driver must be R570 or newer; `uv sync --python 3.10` downloads Python 3.10 if it is not installed); Jetson Orin on CUDA 12.6 with Python 3.10; Jetson Thor and DGX Spark on CUDA 13.0 with Python 3.12. The per-platform install scripts and Dockerfiles live under `scripts/deployment/`; see the [Deployment & Inference Guide](scripts/deployment/README.md) for the full matrix.
 
 ### Clone the Repository
 
@@ -128,6 +128,7 @@ GR00T uses [uv](https://github.com/astral-sh/uv) for fast, reproducible dependen
 
 ```sh
 curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"   # the installer puts uv here; a non-login shell does not have it on PATH yet
 ```
 
 #### dGPU (x86_64) — Default
