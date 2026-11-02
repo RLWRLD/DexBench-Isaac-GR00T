@@ -165,7 +165,9 @@ def main(config: ServerConfig):
         api_token=api_token,
     )
 
-    print(f"\n✓ Server ready — listening on {config.host}:{config.port}\n")
+    # Flushed: a process that waits for this line in the server's log (stdout to a file is block-buffered) saw it only
+    # once the buffer filled, and the server looked stuck while it was serving.
+    print(f"\n✓ Server ready — listening on {config.host}:{config.port}\n", flush=True)
 
     try:
         server.run()
