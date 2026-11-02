@@ -193,7 +193,7 @@ the remaining arguments:
 ```bash
 head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n' > /path/to/token   # once; give the client the same token
 CUDA_VISIBLE_DEVICES=0 uv run bash examples/DexBench/serve.sh \
-  --model-path outputs/rby1-wuji2-arm_rel/checkpoint-30000 \
+  --model-path "$PWD/outputs/rby1-wuji2-arm_rel/checkpoint-30000" \
   --device cuda \
   --host 0.0.0.0 \
   --port 5555 \
@@ -201,8 +201,18 @@ CUDA_VISIBLE_DEVICES=0 uv run bash examples/DexBench/serve.sh \
 ```
 
 With `--api-token-file` the server answers only requests that carry that token (the DexBench client sends it from
-`DEXBENCH_POLICY_API_TOKEN`). Without it, anyone who can reach the port can drive the policy, so keep it on a server
-bound to `0.0.0.0`.
+`DEXBENCH_POLICY_API_TOKEN`; an upstream `PolicyClient` takes it as `PolicyClient(host, port, api_token=...)`).
+Without it, anyone who can reach the port can drive the policy, so keep it on a server bound to `0.0.0.0`.
+
+Serve a `checkpoint-N` directory: each one holds the weights together with the
+processor files (`processor_config.json`, `statistics.json`,
+`embodiment_id.json`), and training writes a final one at `--max-steps`.
+Give `--model-path` as an absolute path. The server checks that an absolute
+path exists; a relative path that does not resolve is taken as a Hugging Face
+repository id and fails with an unrelated download error.
+Loading takes a while. The server prints a line starting with `✓ Server ready`
+once it accepts requests; scripts that start it should wait for that line
+before connecting a client.
 
 For absolute actions, use the checkpoint from `outputs/rby1-wuji2-abs`.
 `RBY1_ACTION_MODE` is not needed for inference.
