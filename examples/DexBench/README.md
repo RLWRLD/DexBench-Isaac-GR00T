@@ -5,9 +5,24 @@ robot and Wuji Hand 2. It provides absolute and arm-relative action configuratio
 for DexBench tasks.
 
 This repository's `main` is upstream Isaac-GR00T's `n1.7-release` tag (commit
-`23ace64f17aa5015259b8609d371eb61a357c776`) plus these DexBench examples. Follow the
-[installation guide](../../README.md#installation) before running the commands
-below from the repository root.
+`23ace64f17aa5015259b8609d371eb61a357c776`) plus these DexBench examples. Clone
+this repository rather than upstream, which does not contain `examples/DexBench`:
+
+```bash
+git clone --recurse-submodules https://github.com/RLWRLD/DexBench-Isaac-GR00T
+cd DexBench-Isaac-GR00T
+```
+
+Then follow the rest of the [installation guide](../../README.md#installation)
+(git-lfs, uv, `uv sync`) before running the commands below from the repository root.
+
+Training and the inference server both load the processor of
+`nvidia/Cosmos-Reason2-2B`, a gated Hugging Face repository. Accept its license
+on its Hugging Face page and log in with a token that can read it
+(`uv run hf auth login`, or set `HF_TOKEN`). A fine-grained token needs
+"Read access to contents of all public gated repos you can access". A machine
+without Hub access can instead use an `HF_HOME` cache that already holds the
+repository.
 
 ## Dataset
 
