@@ -150,12 +150,18 @@ inference. It starts the upstream server with `NEW_EMBODIMENT` and forwards
 the remaining arguments:
 
 ```bash
+head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n' > /path/to/token   # once; give the client the same token
 CUDA_VISIBLE_DEVICES=0 uv run bash examples/DexBench/serve.sh \
   --model-path outputs/rby1-wuji2-arm_rel/checkpoint-30000 \
   --device cuda \
   --host 0.0.0.0 \
-  --port 5555
+  --port 5555 \
+  --api-token-file /path/to/token
 ```
+
+With `--api-token-file` the server answers only requests that carry that token (the DexBench client sends it from
+`DEXBENCH_POLICY_API_TOKEN`). Without it, anyone who can reach the port can drive the policy, so keep it on a server
+bound to `0.0.0.0`.
 
 For absolute actions, use the checkpoint from `outputs/rby1-wuji2-abs`.
 `RBY1_ACTION_MODE` is not needed for inference.
