@@ -129,7 +129,11 @@ set, the camera names are appended, such as
 `outputs/rby1-wuji2-arm_rel-ego_left-wrist_left-wrist_right`. Training resumes from
 the latest checkpoint in the output directory, so keep a separate directory for
 each camera set. Use the same mode when generating statistics and finetuning.
-Set `NUM_GPUS` to change the GPU count.
+Set `NUM_GPUS` to change the GPU count. Each data loader worker reads its own
+shards, so `NUM_GPUS` times `--dataloader-num-workers` must not exceed
+`--num-shards-per-epoch` (32); otherwise training stops at the first batch with
+`IndexError: list index out of range`. `train.sh` uses `min(8, 32 / NUM_GPUS)`
+workers per GPU; pass `--dataloader-num-workers` to override it.
 
 Run arm-relative finetuning with the left ego camera and both wrist cameras:
 
