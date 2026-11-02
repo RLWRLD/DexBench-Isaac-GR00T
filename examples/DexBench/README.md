@@ -178,7 +178,11 @@ RBY1_ACTION_MODE=arm_rel RBY1_CAMERAS=camera_ego_left,camera_wrist_left,camera_w
 Additional arguments are forwarded to the upstream launcher. For example,
 append `--output-dir /path/to/run --max-steps 10000` to override the defaults.
 
-To enable Weights & Biases logging, set `WANDB_ENTITY` and add `--use-wandb`.
+Weights & Biases logging is off unless you add `--use-wandb`, so no W&B key is
+needed by default. With it, log in first (`wandb login` or `WANDB_API_KEY`) and
+set `WANDB_ENTITY`; runs go to the project `finetune-gr00t-n1d7` unless you pass
+`--wandb-project <name>`, and `--experiment-name` sets the run name (default:
+the output directory name).
 
 ## Inference Server
 
