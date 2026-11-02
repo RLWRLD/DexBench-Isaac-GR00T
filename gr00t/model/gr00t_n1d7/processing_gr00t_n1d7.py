@@ -23,6 +23,7 @@ from typing import Any, Dict
 import warnings
 
 import albumentations as A
+from huggingface_hub import constants as hf_constants, snapshot_download
 import numpy as np
 from PIL import Image
 import torch
@@ -77,6 +78,17 @@ def build_processor(model_name: str, transformers_loading_kwargs: dict) -> Qwen3
         raise ImportError(
             "Qwen3VLProcessor is not available. "
             "Please upgrade transformers: pip install transformers>=4.52.0"
+        )
+    local_only = hf_constants.HF_HUB_OFFLINE or transformers_loading_kwargs.get("local_files_only")
+    if local_only and not Path(model_name).is_dir():
+        # Offline or local_files_only, load from the cached snapshot: given a repo id, the pinned transformers asks the
+        # Hub whether the tokenizer is a Mistral one (tokenization_utils_base._patch_mistral_regex) even then and fails;
+        # a local directory skips that question.
+        model_name = snapshot_download(
+            model_name,
+            revision=transformers_loading_kwargs.get("revision"),
+            cache_dir=transformers_loading_kwargs.get("cache_dir"),
+            local_files_only=True,
         )
     return Qwen3VLProcessor.from_pretrained(model_name, **transformers_loading_kwargs)
 

@@ -62,6 +62,10 @@ class ServerConfig:
     port: int = DEFAULT_MODEL_SERVER_PORT
     """Port number for the server"""
 
+    api_token_file: str | None = None
+    """File holding a token every request must carry (PolicyClient's api_token); without it the server answers any
+    request that reaches its port"""
+
     strict: bool = True
     """Whether to enforce strict input and output validation"""
 
@@ -77,6 +81,7 @@ def main(config: ServerConfig):
     print(f"  Device: {config.device}")
     print(f"  Host: {config.host}")
     print(f"  Port: {config.port}")
+    print(f"  Token: {'required' if config.api_token_file else 'not required'}")
 
     # Create and start the server
     if config.model_path is not None:
@@ -148,13 +153,21 @@ def main(config: ServerConfig):
 
         policy = Gr00tSimPolicyWrapper(policy)
 
+    api_token = None
+    if config.api_token_file is not None:
+        api_token = Path(config.api_token_file).read_text().strip()
+        if not api_token:
+            raise ValueError(f"--api-token-file {config.api_token_file} is empty")
     server = PolicyServer(
         policy=policy,
         host=config.host,
         port=config.port,
+        api_token=api_token,
     )
 
-    print(f"\n✓ Server ready — listening on {config.host}:{config.port}\n")
+    # Flushed: a process that waits for this line in the server's log (stdout to a file is block-buffered) saw it only
+    # once the buffer filled, and the server looked stuck while it was serving.
+    print(f"\n✓ Server ready — listening on {config.host}:{config.port}\n", flush=True)
 
     try:
         server.run()
