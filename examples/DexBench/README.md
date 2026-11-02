@@ -164,6 +164,9 @@ shards, so `NUM_GPUS` times `--dataloader-num-workers` must not exceed
 `--num-shards-per-epoch` (32); otherwise training stops at the first batch with
 `IndexError: list index out of range`. `train.sh` uses `min(8, 32 / NUM_GPUS)`
 workers per GPU; pass `--dataloader-num-workers` to override it.
+The workers pass decoded frames through `/dev/shm`, and a container's default
+64 MB is not enough: give it `--shm-size 16g` or more with Docker, or mount an
+`emptyDir` volume with `medium: Memory` at `/dev/shm` on Kubernetes.
 
 Run arm-relative finetuning with the left ego camera and both wrist cameras:
 
